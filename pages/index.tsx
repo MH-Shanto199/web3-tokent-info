@@ -1,9 +1,12 @@
-import { Button, Col, Row, Modal, Input, Form, Select } from 'antd';
+import { Button, Col, Row, Modal, Input, Form, Select, Space } from 'antd';
+import { getSession, signOut } from 'next-auth/react';
 import Head from 'next/head';
 import { useState } from 'react';
+import { useDisconnect } from 'wagmi';
 import { chainMap } from '../chains';
 
 export default function Home() {
+  const {disconnectAsync} = useDisconnect();
   const [modalState, setModalState] = useState(false);
   const [form] = Form.useForm();
   const handaleCancel = () => {
@@ -25,6 +28,11 @@ export default function Home() {
       };
     });
 
+
+    const haldaleLogOut = async () => {
+      await disconnectAsync();
+		  signOut({ callbackUrl: "/signin" });
+    }
   return (
     <>
       <Head>
@@ -36,7 +44,11 @@ export default function Home() {
       <div className="layout">
         <Row align="middle">
           <Col span={12} offset={6}>
-            <Button onClick={() => setModalState(true)}>Add Token</Button>
+            <Space wrap>
+              <Button onClick={() => setModalState(true)}>Add Token</Button>
+              <Button onClick={haldaleLogOut}>Log Out</Button>
+            </Space>
+
             <Modal
               title={[<h2 className="text-center uppercase">import token</h2>]}
               centered
@@ -46,6 +58,11 @@ export default function Home() {
               footer={[]}
             >
               <Form form={form} name="token-info" onFinish={formSubmit}>
+
+                <Form.Item name="tokenAddress" rules={[{ required: true }]}>
+                  <Input placeholder="Token Address" />
+                </Form.Item>
+
                 <Form.Item name="networkId" rules={[{ required: true }]}>
                   <Select
                     showSearch
@@ -59,9 +76,14 @@ export default function Home() {
                     options={selecteChain}
                   />
                 </Form.Item>
-                <Form.Item name="tokenAddress" rules={[{ required: true }]}>
-                  <Input placeholder="Token Address" />
+  
+                <Form.Item name='symbol'>
+                  <Input placeholder='symbol'/>
                 </Form.Item>
+                <Form.Item name='Decimals'>
+                  <Input placeholder='Decimals'/>
+                </Form.Item>
+
                 <Form.Item>
                   <Button type="primary" htmlType="submit">
                     Submit
@@ -75,4 +97,20 @@ export default function Home() {
       </div>
     </>
   );
+}
+
+export async function getServerSideProps(context: any) {
+	const session = await getSession(context);
+	// redirect if not authenticated
+	if (!session?.user) {
+		return {
+			redirect: {
+				destination: "/signin",
+				permanent: false,
+			},
+		};
+	}
+	return {
+		props: { user: session.user},
+	};
 }

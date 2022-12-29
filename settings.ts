@@ -17,6 +17,7 @@ export const settings = {
     wallet: '/wallet',
     dashboard: '/dashboard',
   },
+  // web3Token: ,
   moralisApi: `${process.env.NEXT_PUBLIC_MORALIS_API_KEY}`,
   etherscanApi: `${process.env.NEXT_PUBLIC_ETHERSCAN_API}`,
   contracts: ['ShantoToken', 'IERC20'],

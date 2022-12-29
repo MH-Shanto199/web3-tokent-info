@@ -61,8 +61,8 @@ const signin = () => {
       await connector.switchChain(appChain.id);
     }
 
-    const signature = await Web3Token.sign((message: string) =>
-      signMessageAsync({ message })
+    const signature = await Web3Token.sign(
+      (message: string) => signMessageAsync({ message })
     );
 
     console.log(signature);

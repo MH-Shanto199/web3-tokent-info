@@ -22,14 +22,12 @@ export default NextAuth({
         try {
           if (!credentials?.signature) throw new Error('Invalid signature')
 
-          const { address } = await Web3Token.verify(credentials.signature, {
-            domain: settings.domain,
-          })
+          const { address } = await Web3Token.verify(credentials.signature)
 
           const user = await userFromAddress(address)
 
           if (!user) throw new Error('No user found')
-
+          
           return user
         } catch (e) {
           return null
