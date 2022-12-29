@@ -1,0 +1,39 @@
+/* utils */
+.text-center {
+  text-align: center;
+}
+
+.capitalize {
+  text-transform: capitalize;
+}
+
+.uppercase {
+  text-transform: uppercase;
+}
+
+.w-full {
+  width: 100% !important;
+}
+
+.small-space-bottom {
+  margin-bottom: 16px;
+}
+/* utils */
+
+.layout {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  flex-direction: row;
+  /* background-color: black;
+    color: white; */
+}
+
+.signin-card {
+  text-align: center;
+}
+
+.signin-btn {
+  align-items: center;
+  margin-bottom: 10px;
+}
