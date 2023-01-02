@@ -4,6 +4,7 @@ import Head from 'next/head';
 import { useState } from 'react';
 import { useDisconnect } from 'wagmi';
 import { chainMap } from '../chains';
+import IERC20Queries from '../generated/query-hooks/IERC20Queries'
 
 export default function Home() {
   const {disconnectAsync} = useDisconnect();
@@ -12,6 +13,30 @@ export default function Home() {
   const handaleCancel = () => {
     setModalState(false);
   };
+
+  const [sydState, setSydState] = useState(true)
+
+  const chainId = Form.useWatch('networkId', form)
+  const networkAddress = Form.useWatch('tokenAddress', form)
+
+  const fecthInfo = (chainId:number, networkAddress:string) => {
+    if (chainId === undefined && networkAddress === undefined) {
+      form.setFields([
+        {
+          name: 'networkId',
+          errors: ['NetworkId is required'],
+        },
+        {
+          name: 'tokenAddress',
+          errors: ['TokenAddress is required'],
+        },
+      ])
+    }else{
+      const token = new IERC20Queries(networkAddress, chainId);
+      
+      console.log(token)
+    }
+  }
 
   const formSubmit = (value: any) => {
     console.log(value);
@@ -41,13 +66,12 @@ export default function Home() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <div className="layout">
-        <Row align="middle">
-          <Col span={12} offset={6}>
-            <Space wrap>
+        <Row justify={'center'} style={{marginTop: 50, marginBottom: 50}}>
+          <Col span={12}>
+            <Row justify={'space-between'}>
               <Button onClick={() => setModalState(true)}>Add Token</Button>
               <Button onClick={haldaleLogOut}>Log Out</Button>
-            </Space>
+            </Row>
 
             <Modal
               title={[<h2 className="text-center uppercase">import token</h2>]}
@@ -59,14 +83,10 @@ export default function Home() {
             >
               <Form form={form} name="token-info" onFinish={formSubmit}>
 
-                <Form.Item name="tokenAddress" rules={[{ required: true }]}>
-                  <Input placeholder="Token Address" />
-                </Form.Item>
-
                 <Form.Item name="networkId" rules={[{ required: true }]}>
                   <Select
                     showSearch
-                    placeholder="Select a person"
+                    placeholder="Select Network"
                     optionFilterProp="children"
                     filterOption={(input, option) =>
                       (option?.label ?? '')
@@ -76,25 +96,35 @@ export default function Home() {
                     options={selecteChain}
                   />
                 </Form.Item>
-  
-                <Form.Item name='symbol'>
-                  <Input placeholder='symbol'/>
-                </Form.Item>
-                <Form.Item name='Decimals'>
-                  <Input placeholder='Decimals'/>
-                </Form.Item>
 
-                <Form.Item>
-                  <Button type="primary" htmlType="submit">
-                    Submit
-                  </Button>
+                <Form.Item name="tokenAddress" rules={[{ required: true }]}>
+                  <Input placeholder="Token Address" />
                 </Form.Item>
+  
+                <Form.Item name='symbol' rules={[{ required: true }]}>
+                  <Input placeholder='symbol' disabled={sydState}/>
+                </Form.Item>
+                <Form.Item name='Decimals' rules={[{ required: true }]}>
+                  <Input placeholder='Decimals' disabled={sydState}/>
+                </Form.Item>
+                
+                <Space>
+                  <Form.Item>
+                    <Button type="primary" disabled={sydState} htmlType="submit">
+                      Submit
+                    </Button>
+                  </Form.Item>
+                  <Form.Item>
+                    <Button type="primary" disabled={ sydState === true? false : true} htmlType="button" onClick={() => fecthInfo (chainId, networkAddress)}>
+                      Fecth Info
+                    </Button>
+                  </Form.Item>
+                </Space>
               </Form>
             </Modal>
             
           </Col>
         </Row>
-      </div>
     </>
   );
 }

@@ -1,6 +1,6 @@
 import { Modal } from 'antd';
 
-const Modal = () => {
+const CustomModal = () => {
   return (
     <>
       <Modal title="Vertically centered modal dialog" centered>
