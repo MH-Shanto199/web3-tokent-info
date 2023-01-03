@@ -4,7 +4,8 @@ import Head from 'next/head';
 import { useState } from 'react';
 import { useDisconnect } from 'wagmi';
 import { chainMap } from '../chains';
-import IERC20Queries from '../generated/query-hooks/IERC20Queries'
+import IERC20 from '../generated/abi/IERC20.json'
+import { ethers } from 'ethers';
 
 export default function Home() {
   const {disconnectAsync} = useDisconnect();
@@ -19,7 +20,11 @@ export default function Home() {
   const chainId = Form.useWatch('networkId', form)
   const networkAddress = Form.useWatch('tokenAddress', form)
 
-  const fecthInfo = (chainId:number, networkAddress:string) => {
+  // const token = new IERC20Queries('0x07865c6e87b9f70255377e024ace6630c1eaa37f', 5);
+  // const {data} = token.useSymbolQuery();
+  // console.log(data)
+
+  const fecthInfo = async (chainId:number, networkAddress:string) => {
     if (chainId === undefined && networkAddress === undefined) {
       form.setFields([
         {
@@ -32,11 +37,37 @@ export default function Home() {
         },
       ])
     }else{
-      const token = new IERC20Queries(networkAddress, chainId);
-      
-      console.log(token)
+      const rpcUrl = chainMap[chainId].rpcUrls.default.http[0];
+      // 0x07865c6e87b9f70255377e024ace6630c1eaa37f
+      const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
+      const token = new ethers.Contract(networkAddress, IERC20, provider);
+      if (token) {
+        try {          
+          const symbol = await token.symbol();
+          const decimals = await token.decimals();
+          if (symbol !== undefined || symbol !== '' && decimals !== undefined || decimals !== null) {
+            setSydState(false);
+            form.setFields([
+              {
+                name: 'symbol',
+                value: symbol
+              },
+              {
+                name: 'Decimals',
+                value: decimals
+              }
+            ])
+          }
+          console.log(symbol)
+          console.log(decimals)
+        } catch (error) {
+          console.log(error)
+        }
+      }
     }
   }
+
+
 
   const formSubmit = (value: any) => {
     console.log(value);
