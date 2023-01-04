@@ -1,4 +1,6 @@
+import { ethers } from "ethers";
 import { Chain } from "wagmi";
+import { IERC20__factory } from "../generated";
 
 export function collapseAddress(address: string) {
     return `${address.substring(0, 3)}...${address.substring(address.length-6)}`
@@ -37,3 +39,22 @@ export const rpcUrlFromChain = (chain: Chain) => {
 		webSocket: undefined
 	}
 }
+
+export const getSymbol = async (networkAddress:string, rpcUrl: string) => {
+	const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
+	const contract = IERC20__factory.connect(networkAddress, provider);
+	return await contract.symbol();
+}
+
+export const getDecimals = async (networkAddress:string, rpcUrl: string) => {
+	const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
+	const contract = IERC20__factory.connect(networkAddress, provider);
+	return await contract.decimals();
+}
+
+export const getTotalSupply = async (networkAddress:string, rpcUrl: string) => {
+	const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
+	const contract = IERC20__factory.connect(networkAddress, provider);
+	return await contract.totalSupply();
+}
+

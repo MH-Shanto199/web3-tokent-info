@@ -2,10 +2,10 @@ import { Button, Col, Row, Modal, Input, Form, Select, Space } from 'antd';
 import { getSession, signOut } from 'next-auth/react';
 import Head from 'next/head';
 import { useState } from 'react';
+import toast from 'react-hot-toast';
 import { useDisconnect } from 'wagmi';
 import { chainMap } from '../chains';
-import IERC20 from '../generated/abi/IERC20.json'
-import { ethers } from 'ethers';
+import { getDecimals, getSymbol, getTotalSupply } from '../utils/helpers';
 
 export default function Home() {
   const {disconnectAsync} = useDisconnect();
@@ -15,64 +15,174 @@ export default function Home() {
     setModalState(false);
   };
 
-  const [sydState, setSydState] = useState(true)
+  const [symbolFild, setSymbolFild] = useState(true)
+  const [decimalsFild, setdecimalsFild] = useState(true)
+  const [buttonState, setButtonState] = useState(true)
+  const [formState, setformState] = useState(false)
+
 
   const chainId = Form.useWatch('networkId', form)
   const networkAddress = Form.useWatch('tokenAddress', form)
 
-  // const token = new IERC20Queries('0x07865c6e87b9f70255377e024ace6630c1eaa37f', 5);
-  // const {data} = token.useSymbolQuery();
-  // console.log(data)
-
-  const fecthInfo = async (chainId:number, networkAddress:string) => {
-    if (chainId === undefined && networkAddress === undefined) {
+  const onChangeHandeller = (value:any) => {
+    if (!buttonState) {
       form.setFields([
         {
-          name: 'networkId',
-          errors: ['NetworkId is required'],
+          name: 'symbol',
+          value: null
         },
         {
-          name: 'tokenAddress',
-          errors: ['TokenAddress is required'],
-        },
-      ])
-    }else{
-      const rpcUrl = chainMap[chainId].rpcUrls.default.http[0];
-      // 0x07865c6e87b9f70255377e024ace6630c1eaa37f
-      const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
-      const token = new ethers.Contract(networkAddress, IERC20, provider);
-      if (token) {
-        try {          
-          const symbol = await token.symbol();
-          const decimals = await token.decimals();
-          if (symbol !== undefined || symbol !== '' && decimals !== undefined || decimals !== null) {
-            setSydState(false);
-            form.setFields([
-              {
-                name: 'symbol',
-                value: symbol
-              },
-              {
-                name: 'Decimals',
-                value: decimals
-              }
-            ])
-          }
-          console.log(symbol)
-          console.log(decimals)
-        } catch (error) {
-          console.log(error)
+          name: 'decimals',
+          value: null
         }
-      }
+      ])
+      setButtonState(true)
     }
   }
 
+  const fecthInfo = async (chainId:number, networkAddress:string) => {
+    setformState(true);
+    toast.loading('Facthing Data...', {
+      position: "top-center"
+    })
+    if (chainId === undefined && networkAddress === undefined) {
+      toast.dismiss();
+      toast.error('network & Token Address are required', {
+        position: "top-center"
+      })
+      form.setFields([
+        {
+          name: 'networkId',
+          errors: ['Network is required'],
+        },
+        {
+          name: 'tokenAddress',
+          errors: ['Token Address is required'],
+        },
+      ])
+      setformState(false);
+    } else if (chainId === undefined) {
+      toast.dismiss();
+      toast.error('network is required', {
+        position: "top-center"
+      })
+      form.setFields([
+        {
+          name: 'networkId',
+          errors: ['Network is required'],
+        },
+      ])
+      setformState(false);
+    }else if(networkAddress === undefined) {
+      toast.dismiss();
+      toast.error('Token Address is required', {
+        position: "top-center"
+      })
+      form.setFields([
+        {
+          name: 'tokenAddress',
+          errors: ['Token Address is required'],
+        },
+      ])
+      setformState(false);
+    } else{
+      const rpcUrl = chainMap[chainId].rpcUrls.default.http[0];
+      // 0x07865c6e87b9f70255377e024ace6630c1eaa37f
+      try {
+        const isValidContruct = await getTotalSupply(networkAddress, rpcUrl)
+        if (isValidContruct) {
+          form.setFields([
+            {
+              name: 'tokenAddress',
+              errors: [],
+            },
+          ])
+
+          try {
+            toast.dismiss();
+            toast.loading('Facthing Token Symbol...', {
+              position: "top-center"
+            })
+            const symbol = await getSymbol(networkAddress, rpcUrl)
+            if (symbol) {
+              form.setFields([
+                {
+                  name: 'symbol',
+                  value: symbol
+                }
+              ])
+              toast.dismiss();
+              toast.loading('Successfully get Token Symbol...', {
+                position: "top-center"
+              })
+            }
+          } catch (error) {
+            setSymbolFild(false)
+            toast.dismiss();
+            toast.loading('Token Symbol Not Found...', {
+              position: "top-center"
+            })
+          }
+          try {
+            toast.dismiss();
+            toast.loading('Facthing Token decimals...', {
+              position: "top-center"
+            })
+            const decimals = await getDecimals(networkAddress, rpcUrl)
+            if (decimals) {
+              form.setFields([
+                {
+                  name: 'decimals',
+                  value: decimals
+                }
+              ])
+              toast.dismiss();
+              toast.loading('Successfully get Token decimals...', {
+                position: "top-center"
+              })
+            }
+          } catch (error) {
+            setdecimalsFild(false)
+            toast.dismiss();
+            toast.loading('Token decimals Not Found...', {
+              position: "top-center"
+            })
+          }
+          setButtonState(false)
+          toast.dismiss();
+          toast.success('Facthing Completed',{
+            position: "top-center"
+          });
+          setformState(false);
+        }
+      } catch (error) {
+        form.setFields([
+          {
+            name: 'tokenAddress',
+            errors: ['Invalid TokenAddress'],
+          },
+          {
+            name: 'symbol',
+            value: null
+          },
+          {
+            name: 'decimals',
+            value: null
+          }
+        ])
+        toast.dismiss();
+        toast.error('Invalid TokenAddress',{
+          position: "top-center"
+        });
+        setformState(false);
+      } 
+    }
+  }
 
 
   const formSubmit = (value: any) => {
     console.log(value);
   };
-
   const selecteChain = Object.keys(chainMap)
     .map((item) => {
       return item;
@@ -112,7 +222,7 @@ export default function Home() {
               onCancel={handaleCancel}
               footer={[]}
             >
-              <Form form={form} name="token-info" onFinish={formSubmit}>
+              <Form form={form} name="token-info" onFinish={formSubmit} disabled={formState}>
 
                 <Form.Item name="networkId" rules={[{ required: true }]}>
                   <Select
@@ -125,28 +235,29 @@ export default function Home() {
                         .includes(input.toLowerCase())
                     }
                     options={selecteChain}
+                    onChange={onChangeHandeller}
                   />
                 </Form.Item>
 
                 <Form.Item name="tokenAddress" rules={[{ required: true }]}>
-                  <Input placeholder="Token Address" />
+                  <Input placeholder="Token Address" onChange={onChangeHandeller}/>
                 </Form.Item>
   
                 <Form.Item name='symbol' rules={[{ required: true }]}>
-                  <Input placeholder='symbol' disabled={sydState}/>
+                  <Input placeholder='symbol' disabled={symbolFild}/>
                 </Form.Item>
-                <Form.Item name='Decimals' rules={[{ required: true }]}>
-                  <Input placeholder='Decimals' disabled={sydState}/>
+                <Form.Item name='decimals' rules={[{ required: true }]}>
+                  <Input placeholder='Decimals' disabled={decimalsFild}/>
                 </Form.Item>
                 
                 <Space>
                   <Form.Item>
-                    <Button type="primary" disabled={sydState} htmlType="submit">
+                    <Button type="primary" disabled={buttonState} htmlType="submit">
                       Submit
                     </Button>
                   </Form.Item>
                   <Form.Item>
-                    <Button type="primary" disabled={ sydState === true? false : true} htmlType="button" onClick={() => fecthInfo (chainId, networkAddress)}>
+                    <Button type="primary" disabled={ buttonState === true? false : true} htmlType="button" onClick={() => fecthInfo (chainId, networkAddress)} loading={formState}>
                       Fecth Info
                     </Button>
                   </Form.Item>
