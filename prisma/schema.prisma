@@ -21,7 +21,9 @@ model User {
 }
 
 model tokenInfo {
-  id        Int      @id @default(autoincrement())
-  networkId BigInt
-  tokenAddress String
+  id            Int      @id @default(autoincrement())
+  networkId     Int      
+  tokenAddress  String
+  symbol        String
+  decimals      Int
 }

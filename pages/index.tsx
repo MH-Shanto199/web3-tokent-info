@@ -1,3 +1,4 @@
+import { PrismaClient, tokenInfo } from '@prisma/client';
 import { Button, Col, Row, Modal, Input, Form, Select, Space } from 'antd';
 import { getSession, signOut } from 'next-auth/react';
 import Head from 'next/head';
@@ -5,10 +6,13 @@ import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { useDisconnect } from 'wagmi';
 import { chainMap } from '../chains';
+import { TokenTable } from '../components/TokenTable';
 import { getDecimals, getSymbol, getTotalSupply } from '../utils/helpers';
+import { trpc } from '../utils/trpc';
 
-export default function Home() {
+export default function Home({user}:any) {
   const {disconnectAsync} = useDisconnect();
+  const utils = trpc.useContext();
   const [modalState, setModalState] = useState(false);
   const [form] = Form.useForm();
   const handaleCancel = () => {
@@ -19,7 +23,6 @@ export default function Home() {
   const [decimalsFild, setdecimalsFild] = useState(true)
   const [buttonState, setButtonState] = useState(true)
   const [formState, setformState] = useState(false)
-
 
   const chainId = Form.useWatch('networkId', form)
   const networkAddress = Form.useWatch('tokenAddress', form)
@@ -178,18 +181,34 @@ export default function Home() {
       } 
     }
   }
-
+  const { data } = trpc.token.tokenList.useQuery();
+  const tokens = data?.Tokens;
+  console.log(tokens)
+  const addTokenMUtation = trpc.token.addTokenInfo.useMutation({
+    async onSuccess() {
+      await utils.token.tokenList.invalidate()
+    },
+  })
 
   const formSubmit = (value: any) => {
-    console.log(value);
+    toast.promise(
+      addTokenMUtation.mutateAsync(value),{
+        loading: 'Loading...',
+        success: 'token added successfully',
+        error: 'Token Info already Existed'
+      },{
+        position: 'top-center'
+      }
+    )
   };
+
   const selecteChain = Object.keys(chainMap)
     .map((item) => {
       return item;
     })
     .map((item) => {
       return {
-        value: item,
+        value: Number(item),
         label: chainMap[item].name,
       };
     });
@@ -213,7 +232,6 @@ export default function Home() {
               <Button onClick={() => setModalState(true)}>Add Token</Button>
               <Button onClick={haldaleLogOut}>Log Out</Button>
             </Row>
-
             <Modal
               title={[<h2 className="text-center uppercase">import token</h2>]}
               centered
