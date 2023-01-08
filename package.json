@@ -39,6 +39,7 @@
     "react-dom": "18.2.0",
     "react-hook-form": "^7.41.1",
     "react-hot-toast": "^2.4.0",
+    "react-icons": "^4.7.1",
     "react-qrcode-logo": "^2.8.0",
     "sprintf-js": "^1.1.2",
     "superjson": "^1.12.1",

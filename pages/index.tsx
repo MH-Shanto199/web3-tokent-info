@@ -1,12 +1,11 @@
-import { PrismaClient, tokenInfo } from '@prisma/client';
-import { Button, Col, Row, Modal, Input, Form, Select, Space } from 'antd';
+import { Button, Col, Row, Modal, Input, Form, Select, Space, Card } from 'antd';
 import { getSession, signOut } from 'next-auth/react';
 import Head from 'next/head';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { useDisconnect } from 'wagmi';
 import { chainMap } from '../chains';
-import { TokenTable } from '../components/TokenTable';
+import { TokenInfoCard } from '../components/TokenInfoCard';
 import { getDecimals, getSymbol, getTotalSupply } from '../utils/helpers';
 import { trpc } from '../utils/trpc';
 
@@ -183,10 +182,11 @@ export default function Home({user}:any) {
   }
   const { data } = trpc.token.tokenList.useQuery();
   const tokens = data?.Tokens;
-  console.log(tokens)
+  // console.log(tokens?.length)
   const addTokenMUtation = trpc.token.addTokenInfo.useMutation({
     async onSuccess() {
       await utils.token.tokenList.invalidate()
+      setModalState(false)
     },
   })
 
@@ -228,7 +228,7 @@ export default function Home({user}:any) {
       </Head>
         <Row justify={'center'} style={{marginTop: 50, marginBottom: 50}}>
           <Col span={12}>
-            <Row justify={'space-between'}>
+            <Row justify={'space-between'} style={{marginBottom: 50}}>
               <Button onClick={() => setModalState(true)}>Add Token</Button>
               <Button onClick={haldaleLogOut}>Log Out</Button>
             </Row>
@@ -282,7 +282,22 @@ export default function Home({user}:any) {
                 </Space>
               </Form>
             </Modal>
-            
+            <Row justify={'center'}>
+              <Col span={24}>  
+              {
+                tokens?.length !=0 ?
+                <Card size="default" className="tokenCard-bg">
+                  <Row gutter={[15, 15]}>
+                      {
+                        tokens?.map((item) => (
+                          <TokenInfoCard token={item} user={user}/>
+                        ))
+                      }
+                  </Row>
+                </Card>: <p>There is no Token Information to show </p>
+              }
+              </Col>
+            </Row>
           </Col>
         </Row>
     </>

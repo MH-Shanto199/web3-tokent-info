@@ -3,6 +3,7 @@ import NextAuth from 'next-auth/next'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import Web3Token from 'web3-token'
 import { userFromAddress } from '../../../server/helpers';
+import { User } from 'next-auth';
 
 export default NextAuth({
   session: {
@@ -35,6 +36,18 @@ export default NextAuth({
       },
     }),
   ],
+  callbacks: {
+		async jwt({ token, user }) {
+			if (user) {
+				token.user = user;
+			}
+			return token;
+		},
+		async session({ session, token }) {
+			(session as { user: unknown }).user = await userFromAddress((token.user as User).publicKey);
+			return session;
+		},
+	},
   pages: {
     signIn: settings.url.signIn,
   },
