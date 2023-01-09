@@ -30,10 +30,19 @@ export const tokenInfoRouter = router({
                 code: 'CONFLICT'
             })
         }else{
-            const saveToken = prisma.tokenInfo.create({
+            const saveToken = await prisma.tokenInfo.create({
                 data: input,
             })
             return saveToken;
         }
     }),
+    deleteTokenInfo: authProcedure.input(
+        z.number(),
+    ).mutation(async ({input}) => {
+        const deleteToken = await prisma.tokenInfo.delete({
+            where: {
+                id: input,
+            }
+        })
+    })
 })

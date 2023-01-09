@@ -21,7 +21,7 @@ export const CopyAbleAddress: React.FC<{
 	return (
 		<CopyToClipboard text={address} onCopy={listener}>
 			<span className="public-address cursor-pointer">
-				{copied && <span>Copied...</span>}
+				{copied && <span className="copiedToolTip">Copied...</span>}
 				{address &&
 					(signerAddress &&
 					signerAddress.toLowerCase() === address.toLowerCase()

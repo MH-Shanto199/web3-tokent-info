@@ -22,7 +22,7 @@ export default function Home({user}:any) {
   const [decimalsFild, setdecimalsFild] = useState(true)
   const [buttonState, setButtonState] = useState(true)
   const [formState, setformState] = useState(false)
-
+  const [submitLoading, setSubmitLoading] = useState(false)
   const chainId = Form.useWatch('networkId', form)
   const networkAddress = Form.useWatch('tokenAddress', form)
 
@@ -183,14 +183,41 @@ export default function Home({user}:any) {
   const { data } = trpc.token.tokenList.useQuery();
   const tokens = data?.Tokens;
   // console.log(tokens?.length)
+
   const addTokenMUtation = trpc.token.addTokenInfo.useMutation({
     async onSuccess() {
       await utils.token.tokenList.invalidate()
+      form.setFields([
+        {
+          name: 'networkId',
+          value: null,
+        },
+        {
+          name: 'tokenAddress',
+          value: null,
+        },
+        {
+          name: 'symbol',
+          value: null
+        },
+        {
+          name: 'decimals',
+          value: null
+        }
+      ])
+      setSubmitLoading(false)
+      setformState(false)
       setModalState(false)
     },
+    onError() {
+      setSubmitLoading(false)
+      setformState(false)
+    }
   })
 
   const formSubmit = (value: any) => {
+    setformState(true);
+    setSubmitLoading(true);
     toast.promise(
       addTokenMUtation.mutateAsync(value),{
         loading: 'Loading...',
@@ -233,7 +260,7 @@ export default function Home({user}:any) {
               <Button onClick={haldaleLogOut}>Log Out</Button>
             </Row>
             <Modal
-              title={[<h2 className="text-center uppercase">import token</h2>]}
+              title={[<h2 className="text-center uppercase" key={Math.random()*4}>import token</h2>]}
               centered
               closable
               open={modalState}
@@ -250,7 +277,8 @@ export default function Home({user}:any) {
                     filterOption={(input, option) =>
                       (option?.label ?? '')
                         .toLowerCase()
-                        .includes(input.toLowerCase())
+                        .includes(input.toLowerCase()  
+                      )
                     }
                     options={selecteChain}
                     onChange={onChangeHandeller}
@@ -270,7 +298,7 @@ export default function Home({user}:any) {
                 
                 <Space>
                   <Form.Item>
-                    <Button type="primary" disabled={buttonState} htmlType="submit">
+                    <Button type="primary" disabled={buttonState} htmlType="submit" loading={submitLoading}>
                       Submit
                     </Button>
                   </Form.Item>
@@ -289,8 +317,8 @@ export default function Home({user}:any) {
                 <Card size="default" className="tokenCard-bg">
                   <Row gutter={[15, 15]}>
                       {
-                        tokens?.map((item) => (
-                          <TokenInfoCard token={item} user={user}/>
+                        tokens?.map((item, index) => (
+                          <TokenInfoCard token={item} user={user} key={index+1}/>
                         ))
                       }
                   </Row>

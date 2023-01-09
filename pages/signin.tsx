@@ -15,7 +15,7 @@ import { chainMap } from '../chains';
 import Web3Token from 'web3-token';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/router';
-const signin = () => {
+const Signin = () => {
   const { connectAsync } = useConnect();
   const { disconnectAsync } = useDisconnect();
   const { isConnected } = useAccount();
@@ -122,4 +122,4 @@ const signin = () => {
   );
 };
 
-export default signin;
+export default Signin;

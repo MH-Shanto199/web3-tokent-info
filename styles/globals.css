@@ -52,6 +52,7 @@
 
 .tokenCard {
   padding: 20px;
+  cursor: pointer;
 }
 
 .tokenCard ul {
@@ -63,8 +64,16 @@
 .tokenCard ul li{
   display: flex;
   justify-content: space-between;
+  padding: 8px 0;
+  font-size: 15px;
+  font-family: cursive;
+  font-weight: bold;
 }
 
+.tokenCard ul li span {
+  font-family: normal;
+  font-weight: normal;
+}
 /* .tokenCard ul li span span.symbol {
   
 } */
@@ -81,5 +90,11 @@
   color: #4096ff;
   border-radius: 45%;
   border: none;
+  display: none;
+  transform: 0.6s;
+}
+
+.tokenCard:hover .delete-btn {
+  display: block;
 }
 
