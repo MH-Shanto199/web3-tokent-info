@@ -98,3 +98,11 @@
   display: block;
 }
 
+.copiedToolTip {
+  position: absolute;
+  bottom: 49px;
+  right: 27px;
+  background: #ececec;
+  padding: 0 4px;
+  border-radius: 6px;
+}
